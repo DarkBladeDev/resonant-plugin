@@ -1,0 +1,43 @@
+name: Resonant
+version: 1.0.0
+main: com.resonant.core.ResonantPlugin
+api-version: 1.20
+commands:
+  voice:
+    description: Control del chat de voz
+    usage: /voice [mute|reload|range|code|mod]
+permissions:
+  resonant.use:
+    default: true
+  resonant.reload:
+    default: op
+  resonant.range:
+    default: op
+  resonant.mod.use:
+    default: op
+  resonant.mod.mute:
+    default: op
+  resonant.mod.unmute:
+    default: op
+  resonant.mod.deafen:
+    default: op
+  resonant.mod.undeafen:
+    default: op
+  resonant.mod.kick:
+    default: op
+  resonant.mod.ban:
+    default: op
+  resonant.mod.unban:
+    default: op
+  resonant.mod.warn:
+    default: op
+  resonant.mod.history:
+    default: op
+  resonant.mod.info:
+    default: op
+  resonant.role.admin:
+    default: op
+  resonant.role.mod:
+    default: op
+  resonant.role.helper:
+    default: false

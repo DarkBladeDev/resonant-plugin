@@ -1,0 +1,37 @@
+voiceCore:
+  wsUrl: "ws://127.0.0.1:3000/ws"
+  httpUrl: "http://127.0.0.1:3000"
+  serverId: "lobby-1"
+webClient:
+  baseUrl: "http://localhost:5173"
+auth:
+  secret: "cambia-este-secreto"
+  ttlSeconds: 120
+events:
+  moveIntervalTicks: 10
+proximity:
+  maxDistance: 48
+messages:
+  lang: "es"
+moderation:
+  presets:
+    minute1: 60
+    minutes5: 300
+    hour1: 3600
+  rateLimit:
+    windowSeconds: 60
+    maxActions: 20
+  roles:
+    permissionPrefix: "voicebridge.role."
+    levels:
+      admin: 100
+      mod: 50
+      helper: 10
+  database:
+    driver: "sqlite"
+    url: "jdbc:sqlite:plugins/Resonant/mod.db"
+    username: ""
+    password: ""
+    pool:
+      maxPoolSize: 5
+      minIdle: 1

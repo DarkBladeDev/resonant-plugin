@@ -1,0 +1,11 @@
+{
+  "commands.mute.enabled": "Mute enabled",
+  "commands.mute.disabled": "Mute disabled",
+  "commands.reload.success": "VoiceBridge reloaded",
+  "commands.range.usage": "Usage: /voice range <blocks>",
+  "commands.range.invalidNumber": "Invalid value.",
+  "commands.range.outOfBounds": "Range out of bounds (4-128).",
+  "commands.range.set": "New range: %range% blocks",
+  "commands.voice.linkLabel": "Voice: ",
+  "commands.voice.codeLabel": "Token: "
+}

@@ -1,0 +1,9 @@
+{
+  "status.client.connected": "conectado",
+  "status.client.disconnected": "desconectado",
+  "status.mic.muted": "muteado",
+  "status.mic.unmuted": "sin mute",
+  "status.mic.deafened": "ensordecido",
+  "status.mic.undeafened": "sin ensordecer",
+  "status.ping.unknown": "N/A"
+}

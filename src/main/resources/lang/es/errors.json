@@ -1,0 +1,17 @@
+{
+  "errors.noPermission": "&cNo tienes permisos para usar este comando.",
+  "errors.onlyPlayers": "&cSolo jugadores pueden usar este comando.",
+  "errors.playerNotFound": "&cJugador no encontrado.",
+  "errors.targetSelf": "&cNo puedes moderarte a ti mismo.",
+  "errors.roleHierarchy": "&cNo puedes moderar a un usuario con rol igual o superior.",
+  "errors.missingReason": "&cDebes indicar una razón.",
+  "errors.invalidDuration": "&cDuración inválida. Usa 1m, 5m, 1h o un valor como 30m/2h/1d.",
+  "errors.rateLimited": "&cLímite de uso alcanzado. Inténtalo más tarde.",
+  "errors.mustConfirm": "&cConfirma la acción con /voice mod confirm <código>.",
+  "errors.confirmExpired": "&cLa confirmación expiró.",
+  "errors.notMuted": "&cEl jugador no está muteado.",
+  "errors.notDeafened": "&cEl jugador no está ensordecido.",
+  "errors.notBanned": "&cEl jugador no está baneado.",
+  "errors.notInVoice": "&cEl jugador no está en el chat de voz.",
+  "errors.invalidFilter": "&cFiltro inválido."
+}

@@ -1,0 +1,23 @@
+[versions]
+guava = "33.4.6-jre"
+junit-jupiter = "5.12.1"
+paper-api = "1.20.6-R0.1-SNAPSHOT"
+okhttp = "4.12.0"
+java-jwt = "4.4.0"
+gson = "2.11.0"
+hikari = "5.1.0"
+sqlite = "3.46.0.0"
+slf4j = "2.0.12"
+logback = "1.5.6"
+
+[libraries]
+guava = { module = "com.google.guava:guava", version.ref = "guava" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
+paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper-api" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+java-jwt = { module = "com.auth0:java-jwt", version.ref = "java-jwt" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+hikari = { module = "com.zaxxer:HikariCP", version.ref = "hikari" }
+sqlite = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
