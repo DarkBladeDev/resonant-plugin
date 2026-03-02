@@ -110,7 +110,7 @@ public class ResonantPlugin extends JavaPlugin implements Listener {
                 levels.put(key, rolesSection.getInt(key));
             }
         }
-        String permissionPrefix = getConfig().getString("moderation.roles.permissionPrefix", "voicebridge.role.");
+        String permissionPrefix = getConfig().getString("moderation.roles.permissionPrefix", "resonant.role.");
         roleHierarchy = new RoleHierarchy(levels, permissionPrefix);
         int maxActions = getConfig().getInt("moderation.rateLimit.maxActions", 20);
         long windowSeconds = getConfig().getLong("moderation.rateLimit.windowSeconds", 60);
@@ -129,7 +129,7 @@ public class ResonantPlugin extends JavaPlugin implements Listener {
             sender.sendMessage(moderationMessages.get("errors.onlyPlayers"));
             return true;
         }
-        if (!player.hasPermission("voicebridge.use")) {
+        if (!player.hasPermission("resonant.use")) {
             player.sendMessage(moderationMessages.get("errors.noPermission"));
             return true;
         }
@@ -139,7 +139,7 @@ public class ResonantPlugin extends JavaPlugin implements Listener {
             return true;
         }
         if (args[0].equalsIgnoreCase("mod")) {
-            if (!player.hasPermission("voicebridge.mod.use")) {
+            if (!player.hasPermission("resonant.mod.use")) {
                 player.sendMessage(moderationMessages.get("errors.noPermission"));
                 return true;
             }
@@ -167,7 +167,7 @@ public class ResonantPlugin extends JavaPlugin implements Listener {
             return true;
         }
         if (args[0].equalsIgnoreCase("reload")) {
-            if (!player.hasPermission("voicebridge.reload")) {
+            if (!player.hasPermission("resonant.reload")) {
                 player.sendMessage(moderationMessages.get("errors.noPermission"));
                 return true;
             }
@@ -176,7 +176,7 @@ public class ResonantPlugin extends JavaPlugin implements Listener {
             return true;
         }
         if (args[0].equalsIgnoreCase("range")) {
-            if (!player.hasPermission("voicebridge.range")) {
+            if (!player.hasPermission("resonant.range")) {
                 player.sendMessage(moderationMessages.get("errors.noPermission"));
                 return true;
             }
@@ -212,7 +212,7 @@ public class ResonantPlugin extends JavaPlugin implements Listener {
         if (!(sender instanceof Player player)) {
             return Collections.emptyList();
         }
-        if (!player.hasPermission("voicebridge.use")) {
+        if (!player.hasPermission("resonant.use")) {
             return Collections.emptyList();
         }
         if (args.length == 1) {
@@ -224,13 +224,13 @@ public class ResonantPlugin extends JavaPlugin implements Listener {
             if ("mute".startsWith(input)) {
                 suggestions.add("mute");
             }
-            if (player.hasPermission("voicebridge.mod.use") && "mod".startsWith(input)) {
+            if (player.hasPermission("resonant.mod.use") && "mod".startsWith(input)) {
                 suggestions.add("mod");
             }
-            if (player.hasPermission("voicebridge.reload") && "reload".startsWith(input)) {
+            if (player.hasPermission("resonant.reload") && "reload".startsWith(input)) {
                 suggestions.add("reload");
             }
-            if (player.hasPermission("voicebridge.range") && "range".startsWith(input)) {
+            if (player.hasPermission("resonant.range") && "range".startsWith(input)) {
                 suggestions.add("range");
             }
             return suggestions;
@@ -243,7 +243,7 @@ public class ResonantPlugin extends JavaPlugin implements Listener {
             return modCommand.onTabComplete(sender, command, label, subArgs);
         }
         if (args.length == 2 && args[0].equalsIgnoreCase("range")) {
-            if (!player.hasPermission("voicebridge.range")) {
+            if (!player.hasPermission("resonant.range")) {
                 return Collections.emptyList();
             }
             String input = args[1].toLowerCase();
@@ -364,7 +364,7 @@ public class ResonantPlugin extends JavaPlugin implements Listener {
         if (rolesSection == null) {
             return;
         }
-        String permissionPrefix = getConfig().getString("moderation.roles.permissionPrefix", "voicebridge.role.");
+        String permissionPrefix = getConfig().getString("moderation.roles.permissionPrefix", "resonant.role.");
         JsonArray roles = new JsonArray();
         for (String role : rolesSection.getKeys(false)) {
             if (player.hasPermission(permissionPrefix + role)) {

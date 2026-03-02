@@ -1,7 +1,7 @@
 {
   "commands.mute.enabled": "Mute enabled",
   "commands.mute.disabled": "Mute disabled",
-  "commands.reload.success": "VoiceBridge reloaded",
+  "commands.reload.success": "Resonant reloaded",
   "commands.range.usage": "Usage: /voice range <blocks>",
   "commands.range.invalidNumber": "Invalid value.",
   "commands.range.outOfBounds": "Range out of bounds (4-128).",

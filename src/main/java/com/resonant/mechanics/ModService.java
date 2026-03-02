@@ -53,7 +53,7 @@ public class ModService {
     public record Result(boolean ok, String message) {}
 
     public Result mute(CommandContext ctx, String durationArg, String reason) {
-        if (!ctx.sender().hasPermission("voicebridge.mod.mute")) {
+        if (!ctx.sender().hasPermission("resonant.mod.mute")) {
             return new Result(false, messages.get("errors.noPermission"));
         }
         if (!checkTarget(ctx)) {
@@ -103,7 +103,7 @@ public class ModService {
     }
 
     public Result unmute(CommandContext ctx) {
-        if (!ctx.sender().hasPermission("voicebridge.mod.unmute")) {
+        if (!ctx.sender().hasPermission("resonant.mod.unmute")) {
             return new Result(false, messages.get("errors.noPermission"));
         }
         if (!stateCache.isMuted(ctx.targetUuid())) {
@@ -122,7 +122,7 @@ public class ModService {
     }
 
     public Result deafen(CommandContext ctx, String reason) {
-        if (!ctx.sender().hasPermission("voicebridge.mod.deafen")) {
+        if (!ctx.sender().hasPermission("resonant.mod.deafen")) {
             return new Result(false, messages.get("errors.noPermission"));
         }
         if (!checkTarget(ctx)) {
@@ -147,7 +147,7 @@ public class ModService {
     }
 
     public Result undeafen(CommandContext ctx) {
-        if (!ctx.sender().hasPermission("voicebridge.mod.undeafen")) {
+        if (!ctx.sender().hasPermission("resonant.mod.undeafen")) {
             return new Result(false, messages.get("errors.noPermission"));
         }
         if (!stateCache.isDeafened(ctx.targetUuid())) {
@@ -166,7 +166,7 @@ public class ModService {
     }
 
     public Result kick(CommandContext ctx, String reason, long cooldownSeconds) {
-        if (!ctx.sender().hasPermission("voicebridge.mod.kick")) {
+        if (!ctx.sender().hasPermission("resonant.mod.kick")) {
             return new Result(false, messages.get("errors.noPermission"));
         }
         if (!checkTarget(ctx)) {
@@ -187,7 +187,7 @@ public class ModService {
     }
 
     public Result ban(CommandContext ctx, String durationArg, String reason, ModerationScope scope) {
-        if (!ctx.sender().hasPermission("voicebridge.mod.ban")) {
+        if (!ctx.sender().hasPermission("resonant.mod.ban")) {
             return new Result(false, messages.get("errors.noPermission"));
         }
         if (!checkTarget(ctx)) {
@@ -209,7 +209,7 @@ public class ModService {
     }
 
     public Result unban(CommandContext ctx) {
-        if (!ctx.sender().hasPermission("voicebridge.mod.unban")) {
+        if (!ctx.sender().hasPermission("resonant.mod.unban")) {
             return new Result(false, messages.get("errors.noPermission"));
         }
         if (!stateCache.isBanned(ctx.targetUuid())) {
@@ -228,7 +228,7 @@ public class ModService {
     }
 
     public Result warn(CommandContext ctx, String reason) {
-        if (!ctx.sender().hasPermission("voicebridge.mod.warn")) {
+        if (!ctx.sender().hasPermission("resonant.mod.warn")) {
             return new Result(false, messages.get("errors.noPermission"));
         }
         if (!checkTarget(ctx)) {
@@ -247,7 +247,7 @@ public class ModService {
     }
 
     public Result info(CommandContext ctx) {
-        if (!ctx.sender().hasPermission("voicebridge.mod.info")) {
+        if (!ctx.sender().hasPermission("resonant.mod.info")) {
             return new Result(false, messages.get("errors.noPermission"));
         }
         String clientStatus = voiceConnected.test(ctx.targetUuid())

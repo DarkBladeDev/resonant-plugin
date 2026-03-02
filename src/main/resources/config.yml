@@ -22,7 +22,7 @@ moderation:
     windowSeconds: 60
     maxActions: 20
   roles:
-    permissionPrefix: "voicebridge.role."
+    permissionPrefix: "resonant.role."
     levels:
       admin: 100
       mod: 50
