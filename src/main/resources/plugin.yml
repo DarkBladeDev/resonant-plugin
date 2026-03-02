@@ -1,5 +1,5 @@
 name: Resonant
-version: 1.0.0
+version: ${version}
 main: com.resonant.core.ResonantPlugin
 api-version: 1.20
 commands:

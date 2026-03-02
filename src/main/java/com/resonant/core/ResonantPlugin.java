@@ -8,8 +8,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -22,6 +20,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.scheduler.BukkitTask;
 
 import com.resonant.commands.ModCommand;
+import com.resonant.commands.VoiceCommand;
 import com.resonant.mechanics.ModService;
 import com.resonant.models.PlayerSnapshot;
 import com.resonant.storage.DatabaseProvider;
@@ -31,10 +30,7 @@ import com.resonant.utils.RoleHierarchy;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -56,6 +52,7 @@ public class ResonantPlugin extends JavaPlugin implements Listener {
     private RateLimiter rateLimiter;
     private ModService modService;
     private ModCommand modCommand;
+    private VoiceCommand voiceCommand;
     private String serverId;
     private String webClientBaseUrl;
     private int moveIntervalTicks;
@@ -69,8 +66,12 @@ public class ResonantPlugin extends JavaPlugin implements Listener {
         reloadBridge();
         getServer().getPluginManager().registerEvents(this, this);
         if (getCommand("voice") != null) {
-            getCommand("voice").setExecutor(this);
-            getCommand("voice").setTabCompleter(this);
+            if (voiceCommand == null) {
+                voiceCommand = new VoiceCommand(this);
+            }
+            voiceCommand.updateDependencies(moderationMessages, modCommand);
+            getCommand("voice").setExecutor(voiceCommand);
+            getCommand("voice").setTabCompleter(voiceCommand);
         }
         Bukkit.getScheduler().runTaskTimerAsynchronously(this, this::flushMoveEvents, moveIntervalTicks, moveIntervalTicks);
     }
@@ -117,146 +118,13 @@ public class ResonantPlugin extends JavaPlugin implements Listener {
         rateLimiter = new RateLimiter(Clock.systemUTC(), maxActions, windowSeconds);
         modService = new ModService(this, voiceCoreClient, moderationRepository, moderationMessages, roleHierarchy, rateLimiter, serverId, this::isVoiceConnected, this::getVoicePing);
         modCommand = new ModCommand(modService, moderationMessages);
+        if (voiceCommand != null) {
+            voiceCommand.updateDependencies(moderationMessages, modCommand);
+        }
         for (Player online : Bukkit.getOnlinePlayers()) {
             sendRoles(online);
         }
         startSessionSync();
-    }
-
-    @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage(moderationMessages.get("errors.onlyPlayers"));
-            return true;
-        }
-        if (!player.hasPermission("resonant.use")) {
-            player.sendMessage(moderationMessages.get("errors.noPermission"));
-            return true;
-        }
-        if (args.length == 0) {
-            int range = playerRanges.getOrDefault(player.getUniqueId(), maxDistance);
-            sendVoiceLink(player, range);
-            return true;
-        }
-        if (args[0].equalsIgnoreCase("mod")) {
-            if (!player.hasPermission("resonant.mod.use")) {
-                player.sendMessage(moderationMessages.get("errors.noPermission"));
-                return true;
-            }
-            if (modCommand == null) {
-                player.sendMessage(moderationMessages.get("errors.noPermission"));
-                return true;
-            }
-            String[] subArgs = new String[Math.max(0, args.length - 1)];
-            if (args.length > 1) {
-                System.arraycopy(args, 1, subArgs, 0, args.length - 1);
-            }
-            return modCommand.onCommand(player, command, label, subArgs);
-        }
-        if (args[0].equalsIgnoreCase("mute")) {
-            boolean nowMuted = muted.add(player.getUniqueId());
-            if (!nowMuted) {
-                muted.remove(player.getUniqueId());
-            }
-            JsonObject payload = new JsonObject();
-            payload.addProperty("muted", muted.contains(player.getUniqueId()));
-            sendEvent("mute", player, payload);
-            player.sendMessage(muted.contains(player.getUniqueId())
-                    ? moderationMessages.get("commands.mute.enabled")
-                    : moderationMessages.get("commands.mute.disabled"));
-            return true;
-        }
-        if (args[0].equalsIgnoreCase("reload")) {
-            if (!player.hasPermission("resonant.reload")) {
-                player.sendMessage(moderationMessages.get("errors.noPermission"));
-                return true;
-            }
-            reloadBridge();
-            player.sendMessage(moderationMessages.get("commands.reload.success"));
-            return true;
-        }
-        if (args[0].equalsIgnoreCase("range")) {
-            if (!player.hasPermission("resonant.range")) {
-                player.sendMessage(moderationMessages.get("errors.noPermission"));
-                return true;
-            }
-            if (args.length < 2) {
-                player.sendMessage(moderationMessages.get("commands.range.usage"));
-                return true;
-            }
-            int value;
-            try {
-                value = Integer.parseInt(args[1]);
-            } catch (NumberFormatException ex) {
-                player.sendMessage(moderationMessages.get("commands.range.invalidNumber"));
-                return true;
-            }
-            if (value < 4 || value > 128) {
-                player.sendMessage(moderationMessages.get("commands.range.outOfBounds"));
-                return true;
-            }
-            playerRanges.put(player.getUniqueId(), value);
-            player.sendMessage(moderationMessages.get("commands.range.set").replace("%range%", String.valueOf(value)));
-            sendVoiceLink(player, value);
-            return true;
-        }
-        if (args[0].equalsIgnoreCase("code")) {
-            sendVoiceCode(player);
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player player)) {
-            return Collections.emptyList();
-        }
-        if (!player.hasPermission("resonant.use")) {
-            return Collections.emptyList();
-        }
-        if (args.length == 1) {
-            List<String> suggestions = new ArrayList<>();
-            String input = args[0].toLowerCase();
-            if ("code".startsWith(input)) {
-                suggestions.add("code");
-            }
-            if ("mute".startsWith(input)) {
-                suggestions.add("mute");
-            }
-            if (player.hasPermission("resonant.mod.use") && "mod".startsWith(input)) {
-                suggestions.add("mod");
-            }
-            if (player.hasPermission("resonant.reload") && "reload".startsWith(input)) {
-                suggestions.add("reload");
-            }
-            if (player.hasPermission("resonant.range") && "range".startsWith(input)) {
-                suggestions.add("range");
-            }
-            return suggestions;
-        }
-        if (args.length >= 2 && args[0].equalsIgnoreCase("mod") && modCommand != null) {
-            String[] subArgs = new String[Math.max(0, args.length - 1)];
-            if (args.length > 1) {
-                System.arraycopy(args, 1, subArgs, 0, args.length - 1);
-            }
-            return modCommand.onTabComplete(sender, command, label, subArgs);
-        }
-        if (args.length == 2 && args[0].equalsIgnoreCase("range")) {
-            if (!player.hasPermission("resonant.range")) {
-                return Collections.emptyList();
-            }
-            String input = args[1].toLowerCase();
-            List<String> suggestions = new ArrayList<>();
-            for (int value : new int[]{4, 8, 16, 24, 32, 48, 64, 96, 128}) {
-                String candidate = String.valueOf(value);
-                if (candidate.startsWith(input)) {
-                    suggestions.add(candidate);
-                }
-            }
-            return suggestions;
-        }
-        return Collections.emptyList();
     }
 
     @EventHandler
@@ -337,10 +205,11 @@ public class ResonantPlugin extends JavaPlugin implements Listener {
         return payload;
     }
 
-    private void sendVoiceLink(Player player, int range) {
+    public void sendVoiceLink(Player player, int range) {
         String code = tokenService.createPlayerCode();
         voiceCoreClient.registerPlayerCode(player.getUniqueId(), player.getName(), serverId, code, tokenService.getTtlSeconds());
-        String url = webClientBaseUrl + "?token=" + code + "&range=" + range;
+        String separator = webClientBaseUrl.contains("?") ? "&" : "?";
+        String url = webClientBaseUrl + separator + "token=" + code + "&range=" + range;
         String displayUrl = url.replace("&", "＆");
         Component message = Component.text(moderationMessages.get("commands.voice.linkLabel"), NamedTextColor.AQUA)
                 .append(Component.text(displayUrl, NamedTextColor.GREEN)
@@ -349,7 +218,7 @@ public class ResonantPlugin extends JavaPlugin implements Listener {
         player.sendMessage(message);
     }
 
-    private void sendVoiceCode(Player player) {
+    public void sendVoiceCode(Player player) {
         String code = tokenService.createPlayerCode();
         voiceCoreClient.registerPlayerCode(player.getUniqueId(), player.getName(), serverId, code, tokenService.getTtlSeconds());
         Component message = Component.text(moderationMessages.get("commands.voice.codeLabel"), NamedTextColor.AQUA)
@@ -357,6 +226,29 @@ public class ResonantPlugin extends JavaPlugin implements Listener {
                         .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, code))
                         .decorate(TextDecoration.UNDERLINED));
         player.sendMessage(message);
+    }
+
+    public int getPlayerRange(UUID uuid) {
+        return playerRanges.getOrDefault(uuid, maxDistance);
+    }
+
+    public void setPlayerRange(UUID uuid, int range) {
+        playerRanges.put(uuid, range);
+    }
+
+    public boolean toggleMute(Player player) {
+        boolean nowMuted = muted.add(player.getUniqueId());
+        if (!nowMuted) {
+            muted.remove(player.getUniqueId());
+        }
+        JsonObject payload = new JsonObject();
+        payload.addProperty("muted", muted.contains(player.getUniqueId()));
+        sendEvent("mute", player, payload);
+        return muted.contains(player.getUniqueId());
+    }
+
+    public void reloadBridgeCommand() {
+        reloadBridge();
     }
 
     private void sendRoles(Player player) {
@@ -397,7 +289,7 @@ public class ResonantPlugin extends JavaPlugin implements Listener {
                 }
             }
             sessionSyncSince = snapshot.now();
-        }, error -> getLogger().warning("No se pudo sincronizar sesiones activas: " + error.getMessage()));
+        }, error -> getLogger().warning("Error al sincronizar sesiones activas: " + error.getMessage()));
         sessionSyncTask = Bukkit.getScheduler().runTaskTimerAsynchronously(this, this::pollSessionUpdates, 20L, 20L);
     }
 
@@ -437,6 +329,6 @@ public class ResonantPlugin extends JavaPlugin implements Listener {
                 sessionSyncSince = Math.max(sessionSyncSince, update.ts());
             }
             sessionSyncSince = Math.max(sessionSyncSince, snapshot.now());
-        }, error -> getLogger().warning("No se pudo sincronizar sesiones: " + error.getMessage()));
+        }, error -> getLogger().warning("Failed to sync session updates: " + error.getMessage()));
     }
 }
