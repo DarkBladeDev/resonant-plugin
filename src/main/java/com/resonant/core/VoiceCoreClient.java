@@ -1,7 +1,9 @@
 package com.resonant.core;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.stream.JsonReader;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -36,6 +38,7 @@ public class VoiceCoreClient {
     public record SessionUpdate(String id, long ts, String type, UUID uuid, String serverId, String sessionId, String reason, Long pingMs) {}
     public record ActiveSessionsSnapshot(List<SessionInfo> sessions, long now) {}
     public record SessionUpdatesSnapshot(List<SessionUpdate> updates, long now) {}
+    public record HealthSnapshot(boolean ok, int statusCode, String status, long latencyMs) {}
 
     public VoiceCoreClient(String httpUrl, String secret) {
         this.httpUrl = httpUrl;
@@ -104,6 +107,46 @@ public class VoiceCoreClient {
         });
     }
 
+    public void fetchHealth(Consumer<HealthSnapshot> onSuccess, Consumer<Throwable> onError) {
+        long start = System.nanoTime();
+        Request request = new Request.Builder()
+                .url(httpUrl + "/health")
+                .addHeader("Connection", "close")
+                .get()
+                .build();
+        httpClient.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                LOGGER.log(Level.WARNING, "voice-core health request failed", e);
+                if (onError != null) {
+                    onError.accept(e);
+                }
+            }
+
+            @Override
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) {
+                long latencyMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+                try (response) {
+                    String body = response.body() == null ? "" : response.body().string();
+                    JsonObject json = parseJsonObject(body, "voice-core health");
+                    String status = response.isSuccessful() ? "ok" : "error";
+                    if (json != null && json.has("status") && json.get("status").isJsonPrimitive()) {
+                        status = json.get("status").getAsString();
+                    }
+                    boolean ok = response.isSuccessful() && "ok".equalsIgnoreCase(status);
+                    if (onSuccess != null) {
+                        onSuccess.accept(new HealthSnapshot(ok, response.code(), status, latencyMs));
+                    }
+                } catch (Exception ex) {
+                    LOGGER.log(Level.WARNING, "voice-core health parse failed", ex);
+                    if (onError != null) {
+                        onError.accept(ex);
+                    }
+                }
+            }
+        });
+    }
+
     public void fetchActiveSessions(String serverId, Consumer<ActiveSessionsSnapshot> onSuccess, Consumer<Throwable> onError) {
         fetchActiveSessionsInternal(serverId, onSuccess, onError, 0);
     }
@@ -141,10 +184,13 @@ public class VoiceCoreClient {
                         return;
                     }
                     String body = response.body() == null ? "" : response.body().string();
-                    JsonObject json = gson.fromJson(body, JsonObject.class);
+                    JsonObject json = parseJsonObject(body, "voice-core sessions active");
                     List<SessionInfo> sessions = new ArrayList<>();
-                    if (json != null && json.has("sessions")) {
+                    if (json != null && json.has("sessions") && json.get("sessions").isJsonArray()) {
                         for (var element : json.getAsJsonArray("sessions")) {
+                            if (!element.isJsonObject()) {
+                                continue;
+                            }
                             JsonObject entry = element.getAsJsonObject();
                             sessions.add(new SessionInfo(
                                     UUID.fromString(entry.get("uuid").getAsString()),
@@ -214,10 +260,13 @@ public class VoiceCoreClient {
                         return;
                     }
                     String body = response.body() == null ? "" : response.body().string();
-                    JsonObject json = gson.fromJson(body, JsonObject.class);
+                    JsonObject json = parseJsonObject(body, "voice-core sessions updates");
                     List<SessionUpdate> updates = new ArrayList<>();
-                    if (json != null && json.has("updates")) {
+                    if (json != null && json.has("updates") && json.get("updates").isJsonArray()) {
                         for (var element : json.getAsJsonArray("updates")) {
+                            if (!element.isJsonObject()) {
+                                continue;
+                            }
                             JsonObject entry = element.getAsJsonObject();
                             updates.add(new SessionUpdate(
                                     entry.get("id").getAsString(),
@@ -258,7 +307,12 @@ public class VoiceCoreClient {
             return false;
         }
         String lower = message.toLowerCase(Locale.ROOT);
-        return lower.contains("unexpected end of stream") || lower.contains("eof");
+        String type = error.getClass().getSimpleName().toLowerCase(Locale.ROOT);
+        return lower.contains("unexpected end of stream")
+                || lower.contains("eof")
+                || lower.contains("stream was reset")
+                || lower.contains("cancel")
+                || type.contains("streamreset");
     }
 
     private int retryDelayMs(int attempt) {
@@ -268,5 +322,22 @@ public class VoiceCoreClient {
 
     private void scheduleRetry(Runnable task, int delayMs) {
         CompletableFuture.delayedExecutor(delayMs, TimeUnit.MILLISECONDS).execute(task);
+    }
+
+    private JsonObject parseJsonObject(String body, String context) throws IOException {
+        if (body == null || body.isBlank()) {
+            throw new IOException(context + " empty response");
+        }
+        JsonReader reader = new JsonReader(new java.io.StringReader(body));
+        reader.setLenient(true);
+        JsonElement element = gson.fromJson(reader, JsonElement.class);
+        if (element == null || !element.isJsonObject()) {
+            String preview = body.trim();
+            if (preview.length() > 160) {
+                preview = preview.substring(0, 160) + "...";
+            }
+            throw new IOException(context + " invalid json: " + preview);
+        }
+        return element.getAsJsonObject();
     }
 }

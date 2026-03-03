@@ -105,6 +105,10 @@ public class VoiceCommand implements CommandExecutor, TabCompleter {
                 plugin.sendVoiceCode(player);
                 return true;
             }
+            case "status" -> {
+                plugin.sendVoiceStatus(player);
+                return true;
+            }
             default -> {
                 return false;
             }
@@ -130,6 +134,9 @@ public class VoiceCommand implements CommandExecutor, TabCompleter {
             }
             if (player.hasPermission("resonant.mod.use") && "mod".startsWith(input)) {
                 suggestions.add("mod");
+            }
+            if ("status".startsWith(input)) {
+                suggestions.add("status");
             }
             if (player.hasPermission("resonant.reload") && "reload".startsWith(input)) {
                 suggestions.add("reload");

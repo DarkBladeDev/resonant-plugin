@@ -228,6 +228,35 @@ public class ResonantPlugin extends JavaPlugin implements Listener {
         player.sendMessage(message);
     }
 
+    public void sendVoiceStatus(Player player) {
+        player.sendMessage(moderationMessages.get("commands.status.request"));
+        voiceCoreClient.fetchHealth(snapshot -> {
+            String resultLine = moderationMessages.get("commands.status.result")
+                    .replace("%result%", "HTTP " + snapshot.statusCode())
+                    .replace("%latency%", String.valueOf(snapshot.latencyMs()));
+            String statusKey = snapshot.ok() ? "status.voice.online" : "status.voice.offline";
+            String statusLine = moderationMessages.get("commands.status.apparent")
+                    .replace("%status%", moderationMessages.get(statusKey));
+            Bukkit.getScheduler().runTask(this, () -> {
+                player.sendMessage(resultLine);
+                player.sendMessage(statusLine);
+            });
+        }, error -> {
+            String reason = error.getMessage();
+            if (reason == null || reason.isBlank()) {
+                reason = "unknown";
+            }
+            String resultLine = moderationMessages.get("commands.status.error")
+                    .replace("%error%", reason);
+            String statusLine = moderationMessages.get("commands.status.apparent")
+                    .replace("%status%", moderationMessages.get("status.voice.offline"));
+            Bukkit.getScheduler().runTask(this, () -> {
+                player.sendMessage(resultLine);
+                player.sendMessage(statusLine);
+            });
+        });
+    }
+
     public int getPlayerRange(UUID uuid) {
         return playerRanges.getOrDefault(uuid, maxDistance);
     }

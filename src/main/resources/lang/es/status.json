@@ -5,5 +5,7 @@
   "status.mic.unmuted": "sin mute",
   "status.mic.deafened": "ensordecido",
   "status.mic.undeafened": "sin ensordecer",
-  "status.ping.unknown": "N/A"
+  "status.ping.unknown": "N/A",
+  "status.voice.online": "en línea",
+  "status.voice.offline": "fuera de línea"
 }

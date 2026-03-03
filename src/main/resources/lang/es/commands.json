@@ -6,6 +6,10 @@
   "commands.range.invalidNumber": "Valor inválido.",
   "commands.range.outOfBounds": "Rango fuera de límites (4-128).",
   "commands.range.set": "Nuevo rango: %range% bloques",
+  "commands.status.request": "&7Comprobando estado del voice-core...",
+  "commands.status.result": "&7Resultado: &f%result% &7(%latency%ms)",
+  "commands.status.apparent": "&7Estado: &f%status%",
+  "commands.status.error": "&cResultado: &f%error%",
   "commands.voice.linkLabel": "Voice: ",
   "commands.voice.codeLabel": "Token: "
 }
